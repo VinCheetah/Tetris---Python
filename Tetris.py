@@ -10,6 +10,7 @@ class Tetris () :
     hauteur = 20
     largeur = 10
     bonus_clean = 5
+    auto_fall = 1
     
     
     def __init__(self) :
@@ -18,23 +19,25 @@ class Tetris () :
         self.prev_scores = None
         self.running = True
         self.username = "Undefined"
-        self.auto_fall = 1
 
     
     
-    def dep_right (self) :
+    def dep_right (self) : 
+        # verifie la possibilite d'un deplacement vers la droite
         for x, y in self.falling.right_side() :
             if x + 1 >= self.largeur or not not self.plateau[y][x + 1] :
                 return False
         return True
     
     def dep_left (self) :
+        # verifie la possibilite d'un deplacement vers la gauche
         for x, y in self.falling.left_side() :
             if x - 1 < 0 or not not self.plateau[y][x - 1] :
                 return False
         return True
     
     def dep_down (self) :
+        # verifie la possibilite d'un deplacement vers le bas
         for x, y in self.falling.down_side() :
             if y + 1 >= self.hauteur or (y >= 0 and not not self.plateau[y + 1][x]):
                 print(self.falling.down_side())
@@ -42,6 +45,7 @@ class Tetris () :
         return True
     
     def dep_turn (self, plan_block) :
+        # verifie la possibilite d'une rotation
         for x,y in plan_block :
             if 0 > self.falling.posx + x >= self.largeur or self.falling.posy + y >= self.hauteur or not (self.falling.posy + y < 0 or not self.plateau[y + self.falling.posy][x + self.falling.posx]) :
                 return False
@@ -49,6 +53,7 @@ class Tetris () :
     
     
     def fix (self) :
+        # ancre le bloc en chute au plateau
         for x, y in self.falling.r_list :
             if self.falling.posy + self.falling.midy + y < 0 :
                 self.running = False
@@ -59,6 +64,7 @@ class Tetris () :
                 
             
     def clean_line (self) :
+        # efface les lignes lorsqu'elles sont entierement completees
         for y in range(self.hauteur - 1, -1, -1) :
             clean = True
             while clean :
@@ -81,6 +87,8 @@ class Tetris () :
                 
                 
     def fall (self) :
+        # boucle de la chute d'un block
+        # pas encore valide a cause de problemes avec le module keyboard
         self.falling = Block()
         while self.dep_down():
             free_fall = False
@@ -112,6 +120,8 @@ class Tetris () :
         self.fix()
     
     def fall_test (self) :
+        # boucle de la chute d'un block
+        # modele plus simple a gerer, sans module, mais peu convaincant
         self.falling = Block()
         sleep(0.1)
         while self.dep_down():
@@ -147,6 +157,7 @@ class Tetris () :
         
         
     def play (self) :
+        # debute une nouvelle partie
         self.running = True
         while self.running :
             self.fall_test()
@@ -155,6 +166,7 @@ class Tetris () :
                     
     
     def add_score (self) :
+        # ajoute le score effectue a la sauvegarde
         i = 0
         while i < len(self.prev_scores) and self.score <= self.prev_scores[i][0] :
             i += 1
@@ -162,6 +174,7 @@ class Tetris () :
             pass
         
     def print_plateau (self) :
+        # affiche le plateau sur la console
         n_plateau = deepcopy(self.plateau)
         for x in range (5):
             for y in range (5) :
@@ -188,6 +201,7 @@ class Tetris () :
         print(mess)
         
     def test_anim(self) :
+        # effectue une courte animation, pour verification du bon fonctionnement
         for x in range(self.largeur) :
             for y in range (self.hauteur) :
                 self.print_plateau()
@@ -212,9 +226,13 @@ class Block () :
         self.color = choice([Color.r, Color.g, Color.b, Color.c, Color.y, Color.m, Color.w])
         
     def print_spec (self) :
+        # affiche les caracteristiques du block
         self.print()
         print(self.posx, self.posy, self.r_list, self.block,sep = "\n")
         
+    # Definition des differents blocks possibles
+    # 'c_' designant un block de la version classique
+    
     def c_square_block (self) :
         print("Square Block")
         blo = list([False] * 5 for k in range(5))
@@ -310,6 +328,7 @@ class Block () :
         
         
     def find_mid (self):
+        # determine le point central d'un block
         sum_i, sum_j, tot = 0, 0, 0
         for i in range(5) :
             for j in range(5) :
@@ -321,6 +340,7 @@ class Block () :
         self.midx = int (sum_j / tot + 0.4999)
         
     def find_relative_list (self):
+        # determine la liste des coordonnes des points du block avec pour origine le point central
         lis = []
         for y in range(5) :
             for x in range(5) :
@@ -329,6 +349,7 @@ class Block () :
         self.r_list = lis
         
     def rotate_plans (self) :
+        # effectue les plans de la rotation du block
         fut_r_list = []
         fut_block = []
         for (x,y) in self.r_list :
@@ -337,6 +358,7 @@ class Block () :
         return fut_r_list, fut_block
     
     def rotate (self, plan_list, plan_block) :
+        # effectue la rotation du block
         self.r_list = plan_list
         blo = list([False] * 5 for k in range(5))
         for (x,y) in plan_block :
@@ -344,6 +366,7 @@ class Block () :
         self.block = blo
         
     def left_side (self) :
+        # renvoie la liste des coordonnees des points situes a la frontiere gauche
         lis = []
         for x in range(5):
             for y in range(5) :
@@ -354,6 +377,7 @@ class Block () :
                 
         
     def right_side (self) :
+        # renvoie la liste des coordonnees des points situes a la frontiere droite
         lis = []
         for y in range(5):
             for x in range(4,-1,-1) :
@@ -363,6 +387,7 @@ class Block () :
         return lis
         
     def down_side (self) :
+        # renvoie la liste des coordonnees des points situes a la frontiere du bas
         lis = []
         for x in range(5) :
             for y in range(4) :
@@ -373,6 +398,7 @@ class Block () :
         return lis
                 
     def print_n (self) :
+        # affichage peu satisfaisant de la structure du block
         mes = "-"*7 + "\n"
         for i in range(5) :
             mes += "|"
@@ -387,6 +413,7 @@ class Block () :
         print(mes)
         
     def print (self) :
+        # affichage satisfaisant de la structure d'un block
         mess = "\n\n" + Color.d
         for _ in range(2) :
             mess += 7 * "    " + "\n"
